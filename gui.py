@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 from threading import Thread
 
+from config import Config
+
 def time_to_str(time: float) -> str:
     secs = int(time % 60)
     mins_tot = int(time // 60)
@@ -27,8 +29,6 @@ class TimeWidget:
     def update_label(self):
         self.label
 
-COLOR_ACTIVE = "#44ff44"
-COLOR_IDLE = "#ff7777"
 class TimerWindow:
     def __init__(self, app: "App", key: str):
         self.app = app
@@ -44,15 +44,16 @@ class TimerWindow:
     def update(self, data: dict):
         if self.key not in data:
             return
-    
-        bg_color = COLOR_ACTIVE if self.app.active_window == self.key else COLOR_IDLE
+
+        bg_color = self.app.config.colors["active" if self.app.active_window == self.key else "idle"] 
         self.label.destroy()
         self.label = ttk.Label(master = self.window, text = time_to_str(data[self.key]), background=bg_color, font="Calibri 24")
         self.label.pack()
         self.window.configure(bg=bg_color)
 
 class App:    
-    def __init__(self):
+    def __init__(self, config: Config):
+        self.config = config
         self.window = tk.Tk()
         self.timer_window = TimerWindow(self, "Visual Studio Code")
         self.window.title("OnTrack")

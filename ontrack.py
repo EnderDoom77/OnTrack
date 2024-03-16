@@ -11,10 +11,13 @@ all_data = defaultdict(float)
 last_checked = time.time()
 active_window = None
 
+config = Config.load()
+config.save() # ensure all fields are in the file and the file is generated if it doesn't exist
+
 async def main():
     autosave_time = 0
     update_time = 0
-    app = gui.App()
+    app = gui.App(config)
     while True:
         app.window.update()
         t = time.time()
@@ -63,5 +66,4 @@ saved_data = load_data()
 for k,v in saved_data.items():
     all_data[k] = v
 
-config = Config.load()
 asyncio.run(main())
