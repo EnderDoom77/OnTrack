@@ -13,6 +13,12 @@ class Config:
         self.autosave_interval = autosave_interval
         self.update_interval = update_interval
         self.colors = colors
+
+    def get_color(self, name: str, default: str = "#000000"):
+        if name in self.colors:
+            return self.colors[name]
+        return default
+    
     @staticmethod
     def from_dict(data: dict) -> "Config":
         if data is None: data = {}

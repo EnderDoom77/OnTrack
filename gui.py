@@ -45,7 +45,7 @@ class TimerWindow:
         if self.key not in data:
             return
 
-        bg_color = self.app.config.colors["active" if self.app.active_window == self.key else "idle"] 
+        bg_color = self.app.config.get_color("active" if self.app.active_window == self.key else "idle", "#ffffff") 
         self.label.destroy()
         self.label = ttk.Label(master = self.window, text = time_to_str(data[self.key]), background=bg_color, font="Calibri 24")
         self.label.pack()

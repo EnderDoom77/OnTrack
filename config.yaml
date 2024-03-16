@@ -1,6 +1,6 @@
 autosave_interval: 60
 colors:
-  active: "#55ff55"
-  idle: "#ff7777"
-  text: "#000000"
+  active: '#55ff55'
+  idle: '#ff7777'
+  text: '#000000'
 update_interval: 1
