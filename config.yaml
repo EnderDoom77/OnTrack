@@ -1,10 +1,12 @@
 afk_timeout: 300
-autosave_interval: 60
-banned_substrings:
+autohide_substrings:
 - C:\
+autosave_interval: 60
 colors:
   active: '#55ff55'
   idle: '#ff7777'
   text: '#000000'
+  unselected: '#dddddd'
 label_font: Calibri 24
+label_font_mini: Calibri 16
 update_interval: 1
