@@ -14,13 +14,19 @@ config = Config.load()
 config.save() # ensure all fields are in the file and the file is generated if it doesn't exist
 data = Profile.load(config)
 data.save() # ensure we have at least a blank database file
+frame_rate = 60
+frame_time = 1 / frame_rate
 
 async def main():
     autosave_time = 0
     update_time = 0
+    next_refresh = time.time()
     app = gui.App(config, data)
     while True:
         app.window.update()
+        now = time.time()
+        await asyncio.sleep(next_refresh - now)
+        next_refresh += frame_time
         if app.has_quit: break
         t = time.time()
         if t > update_time:
