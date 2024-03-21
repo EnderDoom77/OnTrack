@@ -118,20 +118,20 @@ class CategoryInfoWidget:
         self.root = root
         self.frame = tk.Frame(master = root)
         self.title_label = ttk.Label(master = self.frame, text = category or "Total", font = app.config.label_font_mini)
-        self.time_var = tk.StringVar(value = f"{app.profile.get_category_time(category)}")
         self.time_session_var = tk.StringVar(value = f"({app.profile.get_category_session_time(category)})")
-        self.timer_label = ttk.Label(master = self.frame, textvariable = self.time_var, font = app.config.label_font)
-        self.session_timer_label = ttk.Label(master = self.frame, textvariable = self.time_session_var, font = app.config.label_font_mini)
+        self.time_var = tk.StringVar(value = f"{app.profile.get_category_time(category)}")
+        self.session_timer_label = ttk.Label(master = self.frame, textvariable = self.time_session_var, font = app.config.label_font)
+        self.timer_label = ttk.Label(master = self.frame, textvariable = self.time_var, font = app.config.label_font_mini)
 
         # Structure
         self.title_label.pack()
-        self.timer_label.pack()
         self.session_timer_label.pack()
+        self.timer_label.pack()
         self.frame.pack(side='left', padx=10, fill="x")
 
     def update(self):
-        self.time_var.set(f"{time_to_str(self.app.profile.get_category_time(self.category))}")
-        self.time_session_var.set(f"({time_to_str(self.app.profile.get_category_session_time(self.category))})")
+        self.time_session_var.set(f"{time_to_str(self.app.profile.get_category_session_time(self.category))}")
+        self.time_var.set(f"({time_to_str(self.app.profile.get_category_time(self.category))})")
 
 class App:    
     def __init__(self, config: Config, data: Profile):
