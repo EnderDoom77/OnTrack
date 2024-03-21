@@ -2,11 +2,17 @@ afk_timeout: 300
 autohide_substrings:
 - C:\
 autosave_interval: 60
+categories:
+- Productivity
+- Entertainment
+- Social
+- Miscellaneous
 colors:
   active: '#55ff55'
   idle: '#ff7777'
   text: '#000000'
   unselected: '#dddddd'
+default_category: Miscellaneous
 label_font: Calibri 24
 label_font_mini: Calibri 16
 update_interval: 1

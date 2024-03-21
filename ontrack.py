@@ -1,8 +1,6 @@
 import pygetwindow as gw
 import asyncio
 import time
-import psutil
-import win32process as wproc
 
 from config import Config
 from data import Profile, ProgramData
