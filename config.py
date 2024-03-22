@@ -4,6 +4,7 @@ CONFIG_FILE = "config.yaml"
 DEFAULT_COLORS = { 
   "active": "#55ff55",
   "idle": "#ff7777",
+  "afk": "#55a0ff",
   "unselected": "#dddddd",
   "text": "#000000"
 }
@@ -12,7 +13,7 @@ class Config:
         autosave_interval: float = 60, 
         update_interval: float = 1, 
         colors: dict[str,str] = DEFAULT_COLORS, 
-        afk_timeout: float = 300, 
+        afk_timeout: float = 60, 
         label_font: str = "Calibri 24",
         label_font_mini: str = "Calibri 16",
         autohide_substrings: list[str] = ["C:\\"],

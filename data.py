@@ -15,6 +15,7 @@ class Profile:
         self.other_params = kwargs
         self.selected_program: ProgramData = self.programs.get(selected_program, DEFAULT_PROGRAM_DATA)
         self.config = config
+        self.afk_time : float = 0
 
     def to_dict(self):
         return {

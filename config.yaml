@@ -1,4 +1,4 @@
-afk_timeout: 300
+afk_timeout: 60
 autohide_substrings:
 - C:\
 autosave_interval: 60
@@ -9,6 +9,7 @@ categories:
 - Miscellaneous
 colors:
   active: '#55ff55'
+  afk: '#55a0ff'
   idle: '#ff7777'
   text: '#000000'
   unselected: '#dddddd'

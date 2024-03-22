@@ -16,14 +16,14 @@ class TimeWidget:
     def __init__(self, app: "App", root: tk.Tk, program_data: ProgramData = DEFAULT_PROGRAM_DATA):
         self.app = app
         self.root = root
-        self.frame = tk.Frame(master = root)
+        self.frame = tk.Frame(master = root, bg = app.config.get_color("unselected"))
         self.data = program_data
         self.selected = self.data.id == self.app.profile.selected_program.id
 
         # Widgets & Variables
         self.hide_button = ttk.Button(master = self.frame, text = "Hide", command = self.hide_program, style = "Danger.TButton")
         self.label_text = tk.StringVar(value = time_to_str(program_data.time))
-        self.label = ttk.Label(master = self.frame, textvariable = self.label_text, font = app.config.label_font)
+        self.label = ttk.Label(master = self.frame, textvariable = self.label_text, font = app.config.label_font, background=app.config.get_color("unselected"))
         self.button_text = tk.StringVar(value = program_data.id)
         self.task_button = ttk.Button(self.frame, textvariable = self.button_text, command = self.set_task)
         self.pinned_var = tk.BooleanVar(value = program_data.visibility == P_VIS_PINNED)
@@ -31,12 +31,15 @@ class TimeWidget:
         self.type_var = tk.StringVar(value = program_data.category)
         self.type_combobox = ttk.Combobox(self.frame, textvariable = self.type_var, values = app.config.categories, state = "readonly")
         self.type_combobox.bind("<<ComboboxSelected>>", self.set_ptype)
+        self.afk_var = tk.BooleanVar(value = program_data.afk_sensitive)
+        self.afk_checkbox = ttk.Checkbutton(self.frame, text = "Can AFK?", variable = self.afk_var, command=self.set_afk)
 
         # Structure
         self.hide_button.pack(side = 'left', padx = 10)
         self.task_button.pack(side = 'left', padx = 10)
         self.label.pack(side = 'left', padx = 10)
         self.pin_checkbox.pack(side = 'left', padx = 10)
+        self.afk_checkbox.pack(side = 'left', padx = 10)
         self.type_combobox.pack(side = 'left', padx = 10)
         self.frame.pack()
 
@@ -56,6 +59,11 @@ class TimeWidget:
         pinned = self.pinned_var.get()
         self.data.visibility = P_VIS_PINNED if pinned else P_VIS_DEFAULT
         self.app.update_view()
+    def set_afk(self):
+        afk = self.afk_var.get()
+        self.data.afk_sensitive = afk
+        print(f"Setting afk sensitivity for {self.data.display_name} to {afk}")
+        self.app.update_view()
 
     def set_ptype(self, _evt):
         self.data.category = self.type_var.get()
@@ -69,6 +77,7 @@ class TimeWidget:
         self.button_text.set(data.id)
         self.pinned_var.set(data.visibility == P_VIS_PINNED)
         self.type_var.set(data.category)
+        self.afk_var.set(data.afk_sensitive)
 
     def set_highlight(self, selected: bool):
         if self.selected == selected: return
@@ -105,7 +114,11 @@ class TimerWindow:
 
     def update(self):
         task = self.app.profile.selected_program
-        bg_color = self.app.config.get_color("active" if self.app.active_window == task.id else "idle", "#ffffff") 
+        color = "idle"
+        if self.app.profile.afk_time >= self.app.config.afk_timeout: color = "afk"
+        elif self.app.active_window == task.id: color = "active"
+
+        bg_color = self.app.config.get_color(color, "#ffffff") 
         self.session_timer_label.configure(background=bg_color, text=time_to_str(task.session_time))
         self.timer_label.configure(background=bg_color, text=f"({time_to_str(task.time)})")
         self.window.configure(bg=bg_color)
