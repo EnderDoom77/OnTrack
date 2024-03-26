@@ -2,11 +2,15 @@ import yaml
 
 CONFIG_FILE = "config.yaml"
 DEFAULT_COLORS = { 
-  "active": "#55ff55",
-  "idle": "#ff7777",
-  "afk": "#55a0ff",
-  "unselected": "#dddddd",
-  "text": "#000000"
+    "active": "#55ff55",
+    "idle": "#ff7777",
+    "afk": "#55a0ff",
+    "unselected": "#dddddd",
+    "text": "#000000",
+    "social": "#88ff88",
+    "productivity": "#ff8888",
+    "entertainment": "#8888ff",
+    "miscellaneous": "#aaaaaa",
 }
 class Config:
     def __init__(self, 

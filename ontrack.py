@@ -77,7 +77,6 @@ def add_data():
     if (program != None):
         if (program.has_afk_timer() and data.afk_time >= config.afk_timeout):
             return
-        program.time += delta_time
-        program.session_time += delta_time
-
+        program.add_time(delta_time)
+        
 asyncio.run(main())

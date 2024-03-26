@@ -11,7 +11,11 @@ categories:
 colors:
   active: '#55ff55'
   afk: '#55a0ff'
+  entertainment: '#8888ff'
   idle: '#ff7777'
+  miscellaneous: '#aaaaaa'
+  productivity: '#ff8888'
+  social: '#88ff88'
   text: '#000000'
   unselected: '#dddddd'
 default_category: Miscellaneous

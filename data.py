@@ -1,4 +1,7 @@
+from datetime import datetime
 import json
+import math
+import time
 
 from config import Config
 
@@ -8,6 +11,14 @@ P_VIS_DEFAULT = "default"
 P_VIS_PINNED = "pinned"
 P_VIS_HIDDEN = "hidden"
 valid_visibilities = {P_VIS_DEFAULT, P_VIS_PINNED, P_VIS_HIDDEN}
+
+def get_time_key(time: float, only_show_day: bool = False) -> str:
+    fmt_str = "%Y-%m-%dT%H:00:00" if not only_show_day else "%Y-%m-%d"
+    return datetime.fromtimestamp(time).strftime(fmt_str)
+
+def get_time_from_key(key: str) -> float:
+    return datetime.strptime(key, "%Y-%m-%dT%H:%M:%S").timestamp()
+
 class Profile:
     def __init__(self, config: Config, programs: dict = {}, selected_program = "", **kwargs):
         self.programs: dict[str, ProgramData] = {k: ProgramData.from_dict(config, k,v) for k,v in programs.items()}
@@ -62,13 +73,23 @@ class Profile:
     def get_total_session_time(self) -> float:
         return sum(p.session_time for p in self.programs.values() if p.is_visible())
     
+    def get_first_timekey(self):
+        return min(p.get_first_timekey() for p in self.programs.values())
+    def get_last_timekey(self):
+        return max(p.get_last_timekey() for p in self.programs.values())
+    def get_first_timestamp(self):
+        return get_time_from_key(self.get_first_timekey())
+    def get_last_timestamp(self):
+        return get_time_from_key(self.get_last_timekey())
+    
 class ProgramData:
-    def __init__(self, config: Config, id: str, time: float = 0, visibility: str = P_VIS_DEFAULT, program_type: str = None, display_name: str | None = None, afk_sensitive: bool = True):
+    def __init__(self, config: Config, id: str, time: float = 0, time_series: dict[str,float] = {}, visibility: str = P_VIS_DEFAULT, program_type: str = None, display_name: str | None = None, afk_sensitive: bool = True):
         self.config = config
         if program_type is None:
             program_type = config.default_category
         self.id = id
         self.time = time
+        self.time_series = time_series
         self.session_time = 0
         self.display_name = self.id if not display_name else display_name
         self.visibility = visibility if visibility in valid_visibilities else P_VIS_DEFAULT
@@ -78,6 +99,7 @@ class ProgramData:
     def to_dict(self):
         result = {
             "time": self.time,
+            "time_series": self.time_series,
         }
         if self.visibility != P_VIS_DEFAULT:
             result["visibility"] = self.visibility
@@ -104,6 +126,36 @@ class ProgramData:
 
     def sortkey(self):
         return (0 if self.visibility == P_VIS_PINNED else 1, -self.time)
+    
+    def add_time(self, delta: float, now: float = time.time()):
+        self.time += delta
+        self.session_time += delta
+        time_key = get_time_key(now)
+        if not time_key in self.time_series:
+            self.time_series[time_key] = 0
+        self.time_series[get_time_key(now)] += delta
+
+    def get_bucketed_time(self, start: float, end: float | None = None, bucket_size = 60 * 60) -> list[float]:
+        if end is None:
+            end = start + bucket_size
+        num_buckets = math.ceil((end - start) / bucket_size)
+        result = [0 for _ in range(num_buckets)]
+        for k,v in self.time_series.items():
+            time = get_time_from_key(k)
+            if time < start or time >= end:
+                continue
+            idx = int((time - start) / bucket_size)
+            result[idx] += v
+        return result
+    
+    def get_first_timekey(self):
+        return min(self.time_series.keys(), default = get_time_key(time.time()))
+    def get_last_timekey(self):
+        return max(self.time_series.keys(), default = get_time_key(time.time()))
+    def get_first_timestamp(self):
+        return get_time_from_key(self.get_first_timekey())
+    def get_last_timestamp(self):
+        return get_time_from_key(self.get_last_timekey())
 
 DEFAULT_PROGRAM_DATA = ProgramData(Config(), "")
 def read_old_profile(config: Config, data: dict, version: int) -> Profile:

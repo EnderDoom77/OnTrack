@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter.messagebox import askokcancel
 from threading import Thread
 from typing import Any
+from lib import graphs
 
 from config import Config
 from data import *
@@ -53,6 +54,7 @@ class TimeWidget:
         self.type_combobox.bind("<<ComboboxSelected>>", self.set_ptype)
         self.afk_var = tk.BooleanVar(value = program_data.afk_sensitive)
         self.afk_checkbox = ttk.Checkbutton(self.frame, text = "Can AFK?", variable = self.afk_var, command=self.set_afk)
+        self.graph_button = ttk.Button(self.frame, text = "Graph", command = lambda: graphs.plot_app_times(self.data))
 
         # Structure
         self.hide_button.pack(side = 'left', padx = 10)
@@ -61,6 +63,7 @@ class TimeWidget:
         self.pin_checkbox.pack(side = 'left', padx = 10)
         self.afk_checkbox.pack(side = 'left', padx = 10)
         self.type_combobox.pack(side = 'left', padx = 10)
+        self.graph_button.pack(side = 'left', padx = 10)
         self.frame.pack(side='top', fill='x', expand=True)
 
         # Style initialization
@@ -183,14 +186,18 @@ class App:
             category: CategoryInfoWidget(self, self.category_panel, category) for category in self.config.categories + [""]
         }
         self.active_window = None
+        self.graph_frame = tk.Frame(master = self.window)
+        self.category_graph_button = ttk.Button(master = self.graph_frame, text = "Category Graph", command = lambda: graphs.plot_category_times(self.profile, self.config))
 
         # Event handlers
         self.window.protocol("WM_DELETE_WINDOW", self.handle_close)
 
         # Structure
         self.category_panel.pack(side = 'top')
+        self.category_graph_button.pack(side = 'left')
+        self.graph_frame.pack(side = 'top')
         self.timer_panel.pack(side = 'top', fill = 'both', expand = True)
-
+        
         # Styling
         danger_btn_style = ttk.Style()
         danger_btn_style.configure("Danger.TButton", background="#ff8888")
