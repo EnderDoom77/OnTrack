@@ -19,6 +19,9 @@ def get_time_key(time: float, only_show_day: bool = False) -> str:
 def get_time_from_key(key: str) -> float:
     return datetime.strptime(key, "%Y-%m-%dT%H:%M:%S").timestamp()
 
+def time_to_date_str(time: float, fmt: str = "%Y-%m-%d") -> str:
+    return datetime.fromtimestamp(time).strftime(fmt)
+
 class Profile:
     def __init__(self, config: Config, programs: dict = {}, selected_program = "", **kwargs):
         self.programs: dict[str, ProgramData] = {k: ProgramData.from_dict(config, k,v) for k,v in programs.items()}

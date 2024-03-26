@@ -16,3 +16,10 @@ def add_to_list(lst: list[float], addend: list[float]):
 
 def clamp(x, a, b):
     return max(a, min(b, x))
+
+def get_tristate_from_selected(num_selected, num_total):
+    if num_selected == 0:
+        return "unchecked"
+    if num_selected == num_total:
+        return "checked"
+    return "tristate"
