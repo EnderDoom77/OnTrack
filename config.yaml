@@ -2,6 +2,7 @@ afk_timeout: 60
 autohide_substrings:
 - C:\
 autosave_interval: 60
+button_width: 20
 categories:
 - Productivity
 - Entertainment

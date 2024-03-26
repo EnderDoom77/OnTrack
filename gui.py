@@ -2,21 +2,41 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter.messagebox import askokcancel
 from threading import Thread
+from typing import Any
 
 from config import Config
 from data import *
-def time_to_str(time: float) -> str:
-    secs = int(time % 60)
-    mins_tot = int(time // 60)
-    mins = mins_tot % 60
-    hours = mins_tot // 60
-    return f"{hours:02d}:{mins:02d}:{secs:02d}"
+from lib.mathlib import time_to_str, clamp
+
+class ScrollableFrame(tk.Frame):
+    def __init__(self, parent: tk.Misc, cnf: dict[str,Any] = {}, **kwargs):
+        tk.Frame.__init__(self, parent, cnf, **kwargs)
+        self.canvas = tk.Canvas(self, background="#ffffff")
+        self.frame = tk.Frame(self.canvas, background="#ffffff")
+        self.vsb = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=self.vsb.set)
+
+        self.vsb.pack(side="right", fill="y")
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.canvas.create_window((4,4), window=self.frame, anchor="n", tags="self.frame")
+
+        self.frame.bind("<Configure>", self.onFrameConfigure)
+        self.canvas.bind_all("<MouseWheel>", self.onMouseWheel)
+
+    def onFrameConfigure(self, _evt):
+        '''Reset the scroll region to encompass the inner frame'''
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+    
+    def onMouseWheel(self, _evt):
+        '''Handle mouse wheel events'''
+        print(f"Mouse wheel handling from scrollable frame, {_evt.delta}")
+        self.canvas.yview_scroll(-_evt.delta // 120, "units")
 
 class TimeWidget:
     def __init__(self, app: "App", root: tk.Tk, program_data: ProgramData = DEFAULT_PROGRAM_DATA):
         self.app = app
         self.root = root
-        self.frame = tk.Frame(master = root, bg = app.config.get_color("unselected"))
+        self.frame = tk.Frame(master = root, bg = app.config.get_color("unselected"), border=1, relief="solid")
         self.data = program_data
         self.selected = self.data.id == self.app.profile.selected_program.id
 
@@ -25,7 +45,7 @@ class TimeWidget:
         self.label_text = tk.StringVar(value = time_to_str(program_data.time))
         self.label = ttk.Label(master = self.frame, textvariable = self.label_text, font = app.config.label_font, background=app.config.get_color("unselected"))
         self.button_text = tk.StringVar(value = program_data.id)
-        self.task_button = ttk.Button(self.frame, textvariable = self.button_text, command = self.set_task)
+        self.task_button = ttk.Button(self.frame, textvariable = self.button_text, command = self.set_task, width=app.config.button_width)
         self.pinned_var = tk.BooleanVar(value = program_data.visibility == P_VIS_PINNED)
         self.pin_checkbox = ttk.Checkbutton(self.frame, text = "Pin", variable = self.pinned_var, command=self.set_pinned)
         self.type_var = tk.StringVar(value = program_data.category)
@@ -41,7 +61,7 @@ class TimeWidget:
         self.pin_checkbox.pack(side = 'left', padx = 10)
         self.afk_checkbox.pack(side = 'left', padx = 10)
         self.type_combobox.pack(side = 'left', padx = 10)
-        self.frame.pack()
+        self.frame.pack(side='top', fill='x', expand=True)
 
         # Style initialization
         self.set_highlight(self.selected)
@@ -158,6 +178,7 @@ class App:
         self.window.geometry('800x600')
         self.data_widgets : list[TimeWidget] = []
         self.category_panel = tk.Frame(master = self.window)
+        self.timer_panel = ScrollableFrame(self.window)
         self.category_widgets = {
             category: CategoryInfoWidget(self, self.category_panel, category) for category in self.config.categories + [""]
         }
@@ -168,6 +189,7 @@ class App:
 
         # Structure
         self.category_panel.pack(side = 'top')
+        self.timer_panel.pack(side = 'top', fill = 'both', expand = True)
 
         # Styling
         danger_btn_style = ttk.Style()
@@ -199,7 +221,7 @@ class App:
         eligible_keys = [k for k in self.profile.programs.keys() if self.profile.programs[k].is_visible()]
         keys = sorted(eligible_keys, key = lambda i: (self.profile.programs[i].sortkey()))
         while len(self.data_widgets) < len(keys):
-            self.data_widgets.append(TimeWidget(self, self.window))
+            self.data_widgets.append(TimeWidget(self, self.timer_panel.frame))
         while len(self.data_widgets) > len(keys):
             self.data_widgets.pop().frame.destroy()
         for k,widget in zip(keys,self.data_widgets):

@@ -14,6 +14,7 @@ class Config:
         update_interval: float = 1, 
         colors: dict[str,str] = DEFAULT_COLORS, 
         afk_timeout: float = 60, 
+        button_width: int = 20,
         label_font: str = "Calibri 24",
         label_font_mini: str = "Calibri 16",
         autohide_substrings: list[str] = ["C:\\"],
@@ -24,6 +25,7 @@ class Config:
         self.autosave_interval = autosave_interval
         self.update_interval = update_interval
         self.colors = colors
+        self.button_width = button_width
         for k in DEFAULT_COLORS:
             if not k in self.colors:
                 self.colors[k] = DEFAULT_COLORS[k]
@@ -50,6 +52,7 @@ class Config:
             "autosave_interval": self.autosave_interval,
             "update_interval": self.update_interval,
             "afk_timeout": self.afk_timeout,
+            "button_width": self.button_width,
             "colors": self.colors,
             "label_font": self.label_font,
             "label_font_mini": self.label_font_mini,
