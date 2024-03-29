@@ -2,5 +2,6 @@ build/**
 **/__pycache__/**
 **.spec
 **.json
+**.yaml
 !VERSION_DATA.json
 temp_graph.png
