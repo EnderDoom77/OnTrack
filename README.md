@@ -8,7 +8,7 @@ At the moment, OnTrack is only supported on Windows operating systems.
 
 - Python >3.12 (might work on lower versions, but 3.12 is the active development version)
 - `tkinter`: usually comes bundled with modern Python installations
-- Pip modules: `pygetwindow`, `pyyaml`, `keyboard`, `tkcalendar`, `pillow`, `matplotlib`, `ttkwidgets`
+- Pip modules: `pygetwindow`, `pyyaml`, `keyboard`, `tkcalendar`, `pillow`, `matplotlib`, `ttkwidgets`, `requests`
 - For building: The `pyinstaller` pip module
 
 ## Getting started
