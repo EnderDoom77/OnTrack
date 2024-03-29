@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox
 from PIL import ImageTk, Image
 from matplotlib import pyplot as plt
 from tkcalendar import Calendar, DateEntry
@@ -11,6 +12,7 @@ from datetime import datetime, date
 from config import Config
 from data import *
 from lib import graphs
+from lib.errors import GraphingError
 from lib.mathlib import time_to_str, clamp
 from lib.components import ScrollableFrame, ProgramSetSelector
 
@@ -205,7 +207,11 @@ class StatisticsWindow:
     def update_graph(self, _evt = None):
         split_by_categories = self.category_split_var.get()
         selected_programs = self.program_selector.get_checked()
-        figure, _ = graphs.build_activity_graph(self.app.profile, self.app.config, self.timestamp_start, self.timestamp_end, self.selected_timestep, split_by_categories, selected_programs)
+        try:
+            figure, _ = graphs.build_activity_graph(self.app.profile, self.app.config, self.timestamp_start, self.timestamp_end, self.selected_timestep, split_by_categories, selected_programs)
+        except GraphingError as e:
+            messagebox.showerror("Graphing Error", f"{e}")
+            return
         TEMP_FILENAME = "temp_graph.png"
         figure.savefig(TEMP_FILENAME)
         plt.close(figure)

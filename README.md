@@ -23,3 +23,11 @@ In some cases, since this program tracks active windows, using `--noconsole` can
 
 Documentation on the [tkcalendar](https://tkcalendar.readthedocs.io/en/stable/index.html) module states that there may be issues with PyInstaller and the `babel.numbers` hidden import.
 Refer to the [tkcalendar HowTos - PyInstaller section](https://tkcalendar.readthedocs.io/en/stable/howtos.html#pyinstaller) to fix this issue if a problem arises during building.
+
+The recommended safe command is: `py -m PyInstaller --onefile --hidden-import babel.numbers ontrack.py`
+
+## Auto updating
+
+The self_update executable should fetch the `latest_stable` data from VERSION_DATA and update the ontrack executable with anything it needs.
+
+To build the `self_update.py` script, use `py -m PyInstaller --onefile self_update.py`

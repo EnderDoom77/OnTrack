@@ -15,6 +15,9 @@ valid_visibilities = {P_VIS_DEFAULT, P_VIS_PINNED, P_VIS_HIDDEN}
 def get_time_key(time: float, only_show_day: bool = False) -> str:
     fmt_str = "%Y-%m-%dT%H:00:00" if not only_show_day else "%Y-%m-%d"
     return datetime.fromtimestamp(time).strftime(fmt_str)
+def get_time_key_pretty(time: float, only_show_day: bool = False) -> str:
+    fmt_str = "%b %d %I%p" if not only_show_day else "%b %d"
+    return datetime.fromtimestamp(time).strftime(fmt_str)
 
 def get_time_from_key(key: str) -> float:
     return datetime.strptime(key, "%Y-%m-%dT%H:%M:%S").timestamp()

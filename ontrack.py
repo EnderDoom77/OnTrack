@@ -66,6 +66,9 @@ def add_data():
     delta_time = now - last_checked
     last_checked = now
 
+    # Never increase program time by more than twice the update interval
+    delta_time = min(2 * config.update_interval, delta_time)
+
     pid = get_active_pid()
     if (pid == None): return
     app_name = try_get_proc_name(pid, True)

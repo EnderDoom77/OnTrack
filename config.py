@@ -24,6 +24,8 @@ class Config:
         autohide_substrings: list[str] = ["C:\\"],
         categories: list[str] = ["Productivity", "Entertainment", "Social", "Miscellaneous"],
         default_category: str = "Miscellaneous",
+        max_plot_buckets = 100,
+        max_plot_labels = 10,
         **kwargs
     ):        
         self.autosave_interval = autosave_interval
@@ -39,6 +41,8 @@ class Config:
         self.autohide_substrings = autohide_substrings
         self.categories = categories
         self.default_category = default_category
+        self.max_plot_buckets = max_plot_buckets
+        self.max_plot_labels = max_plot_labels
         if len(kwargs) != 0:
             print(f"[WARNING] unknown fields during config parsing: {kwargs}")
 
@@ -62,7 +66,9 @@ class Config:
             "label_font_mini": self.label_font_mini,
             "autohide_substrings": self.autohide_substrings,
             "categories": self.categories,
-            "default_category": self.default_category
+            "default_category": self.default_category,
+            "max_plot_buckets": self.max_plot_buckets,
+            "max_plot_labels": self.max_plot_labels
         }
     
     @staticmethod
