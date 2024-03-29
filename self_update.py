@@ -8,10 +8,9 @@ def build_repo_path(file):
     return f"https://raw.githubusercontent.com/EnderDoom77/OnTrack/master/{file}"
 
 def die():
-    print("Exiting in 5 seconds...")
+    print("Exiting automatically in 5 seconds...")
     time.sleep(5)
     exit()
-
 
 print("Downloading version data...")
 
@@ -41,18 +40,22 @@ except:
 
 print(f"Downloaded build for version {target_version}. Clearing old files...")
 
-for f in os.listdir():
-    if f.startswith("ontrack_v") and f.endswith(".zip"):
-        os.remove(f)
-    if f.startswith("_internal"):
-        os.remove(f)
-    if f.startswith("ontrack.exe"):
-        os.remove(f)
+try:
+    for f in os.listdir():
+        if f.startswith("ontrack") and (f.endswith(".zip") or f.endswith(".exe")):
+            os.remove(f)
+except Exception as e:
+    print(f"Error clearing old files: {e}")
+    die()
 
 print("Cleared old files. Saving new build...")
 
-with open(f"ontrack_v{target_version}.zip", "wb") as f:
-    f.write(target_zip.content)
+try:
+    with open(f"ontrack_v{target_version}.zip", "wb") as f:
+        f.write(target_zip.content)
+except:
+    print(f"Error saving build for version {target_version}")
+    die()
 
 print(f"Saved build for version {target_version}. Unzipping...")
 
