@@ -1,11 +1,9 @@
 import math
-import os
 from matplotlib import axes, pyplot as plt
 from matplotlib.figure import Figure
-from PIL import Image, ImageTk
 
 from config import Config
-from data import Profile, ProgramData, get_time_from_key, get_time_key
+from data import Profile, ProgramData, get_time_key
 from lib.mathlib import add_to_list
 import numpy as np
 
