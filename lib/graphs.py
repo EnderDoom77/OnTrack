@@ -111,14 +111,20 @@ def advanced_time_plot(x: list, x_subdivs: list[str], data: dict[str, tuple[str,
         for j in range(len(x_subdivs)):
             effective_offsets.append(i + j * width)
 
+    highest_total = 0
+    for vals in segmented_data_effective_bars:
+        total = sum(vals.values())
+        if total > highest_total:
+            highest_total = total
+
     keys = list(data.keys()) + [GROUPING_OTHER]
     sizes_per_program = {pname: [] for pname in keys}
     offsets_per_program = {pname: [] for pname in keys}
     bottoms_per_program = {pname: [] for pname in keys}
     # Then, we need to sort each individual subdivision and lump certain programs into a new "other" category
     for i,vals in enumerate(segmented_data_effective_bars):
-        total = sum(vals.values())
-        bucketed = bucket_into_other(vals, config.min_piece_fraction_bars * total, GROUPING_OTHER)
+        threshold = max(config.min_peak_fraction_bars * highest_total, config.min_piece_fraction_bars * sum(vals.values()))
+        bucketed = bucket_into_other(vals, threshold, GROUPING_OTHER)
         # Reverse is false because we want to create the bar plot starting from the bottom
         sorted_keys, sorted_vals = sort_dict_by_value(bucketed, reverse=False, force_min_key=GROUPING_OTHER)
         bot = 0
@@ -265,7 +271,7 @@ def build_pie_chart(profile: Profile, config: Config, timestamp_start: float, ti
         data = {prog.display_name: prog.get_timeframe_time(timestamp_start, timestamp_end) for prog in selected_programs}
 
     total = sum(data.values())
-    data = bucket_into_other(data, config.min_piece_fraction * total)
+    data = bucket_into_other(data, config.min_piece_fraction_pie * total)
     keys, values = sort_dict_by_value(data, reverse=False)
     return plot_pie_chart(keys, values, config, f"Task Distribution from {get_time_key_pretty(timestamp_start, True)} to {get_time_key_pretty(timestamp_end, True)}")
     

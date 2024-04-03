@@ -47,7 +47,9 @@ class Config:
         default_category: str = "Miscellaneous",
         max_plot_buckets = 100,
         max_plot_labels = 10,
-        min_piece_fraction = 0.05,
+        min_piece_fraction_pie = 0.05,
+        min_piece_fraction_bars = 0.05,
+        min_peak_fraction_bars = 0.02,
         misc_colors = DEFAULT_MISC_COLORS,
         **kwargs
     ):        
@@ -67,9 +69,9 @@ class Config:
         self.max_plot_buckets = max_plot_buckets
         self.max_plot_labels = max_plot_labels
         self.misc_colors = misc_colors
-        self.min_piece_fraction = min_piece_fraction
-        # Might make this a separate configurable value, forward compatibility!
-        self.min_piece_fraction_bars = min_piece_fraction
+        self.min_piece_fraction_pie = min_piece_fraction_pie
+        self.min_piece_fraction_bars = min_piece_fraction_bars
+        self.min_peak_fraction_bars = min_peak_fraction_bars
         if len(kwargs) != 0:
             print(f"[WARNING] unknown fields during config parsing: {kwargs}")
 
@@ -97,7 +99,9 @@ class Config:
             "max_plot_buckets": self.max_plot_buckets,
             "max_plot_labels": self.max_plot_labels,
             "misc_colors": self.misc_colors,
-            "min_piece_fraction": self.min_piece_fraction,
+            "min_piece_fraction_pie": self.min_piece_fraction_pie,
+            "min_piece_fraction_bars": self.min_piece_fraction_bars,
+            "min_peak_fraction_bars": self.min_peak_fraction_bars
         }
     
     @staticmethod

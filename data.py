@@ -139,9 +139,9 @@ class ProgramData:
         time_key = get_time_key(now)
         if not time_key in self.time_series:
             self.time_series[time_key] = 0
-        print(f"Adding {delta:.3f} to {self.display_name} at {time_key}")
+        # print(f"Adding {delta:.3f} to {self.display_name} at {time_key}")
         self.time_series[time_key] += delta
-        print("  New value:" , self.time_series[time_key])
+        # print("  New value:" , self.time_series[time_key])
 
     def get_bucketed_time(self, start: float, end: float | None = None, bucket_size = 60 * 60) -> list[float]:
         if end is None:
