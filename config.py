@@ -1,3 +1,4 @@
+from typing import Generator, NoReturn
 import yaml
 
 CONFIG_FILE = "config.yaml"
@@ -10,8 +11,28 @@ DEFAULT_COLORS = {
     "social": "#88ff88",
     "productivity": "#ff8888",
     "entertainment": "#8888ff",
-    "miscellaneous": "#aaaaaa",
+    "miscellaneous": "#aaaaaa"
 }
+DEFAULT_MISC_COLORS = [
+    "#faedcb",
+    "#c9e4d3",
+    "#c6def1",
+    "#dbcdf0",
+    "#f2c6de",
+    "#f7d9c4",
+    "#f2da3d",
+    "#39a862",
+    "#327ab3",
+    "#583191",
+    "#992c68",
+    "#c97132",
+    "#664a00",
+    "#003614",
+    "#002f54",
+    "#1e004a",
+    "#4a0028",
+    "#3d1900"
+]
 class Config:
     def __init__(self, 
         autosave_interval: float = 60, 
@@ -26,6 +47,8 @@ class Config:
         default_category: str = "Miscellaneous",
         max_plot_buckets = 100,
         max_plot_labels = 10,
+        min_piece_fraction = 0.05,
+        misc_colors = DEFAULT_MISC_COLORS,
         **kwargs
     ):        
         self.autosave_interval = autosave_interval
@@ -43,6 +66,10 @@ class Config:
         self.default_category = default_category
         self.max_plot_buckets = max_plot_buckets
         self.max_plot_labels = max_plot_labels
+        self.misc_colors = misc_colors
+        self.min_piece_fraction = min_piece_fraction
+        # Might make this a separate configurable value, forward compatibility!
+        self.min_piece_fraction_bars = min_piece_fraction
         if len(kwargs) != 0:
             print(f"[WARNING] unknown fields during config parsing: {kwargs}")
 
@@ -68,7 +95,9 @@ class Config:
             "categories": self.categories,
             "default_category": self.default_category,
             "max_plot_buckets": self.max_plot_buckets,
-            "max_plot_labels": self.max_plot_labels
+            "max_plot_labels": self.max_plot_labels,
+            "misc_colors": self.misc_colors,
+            "min_piece_fraction": self.min_piece_fraction,
         }
     
     @staticmethod
@@ -90,3 +119,9 @@ class Config:
             if ss in key:
                 return True
         return False
+    
+    def color_generator(self) -> Generator[str, None, NoReturn]:
+        colors = self.misc_colors
+        while True:
+            for c in colors:
+                yield c

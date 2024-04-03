@@ -97,7 +97,7 @@ class ProgramData:
         self.time = time
         self.time_series = time_series
         self.session_time = 0
-        self.display_name = self.id if not display_name else display_name
+        self.display_name = self.id.title() if not display_name else display_name
         self.visibility = visibility if visibility in valid_visibilities else P_VIS_DEFAULT
         self.category = program_type if program_type in config.categories else config.default_category
         self.afk_sensitive = afk_sensitive
@@ -111,7 +111,7 @@ class ProgramData:
             result["visibility"] = self.visibility
         if self.category != self.config.default_category:
             result["program_type"] = self.category
-        if self.display_name != self.id:
+        if self.display_name != self.id.title():
             result["display_name"] = self.display_name
         if not self.afk_sensitive:
             result["afk_sensitive"] = False
@@ -139,7 +139,9 @@ class ProgramData:
         time_key = get_time_key(now)
         if not time_key in self.time_series:
             self.time_series[time_key] = 0
-        self.time_series[get_time_key(now)] += delta
+        print(f"Adding {delta:.3f} to {self.display_name} at {time_key}")
+        self.time_series[time_key] += delta
+        print("  New value:" , self.time_series[time_key])
 
     def get_bucketed_time(self, start: float, end: float | None = None, bucket_size = 60 * 60) -> list[float]:
         if end is None:
@@ -153,6 +155,9 @@ class ProgramData:
             idx = int((time - start) / bucket_size)
             result[idx] += v
         return result
+    
+    def get_timeframe_time(self, start: float, end: float) -> float:
+        return sum(v for k,v in self.time_series.items() if start <= get_time_from_key(k) < end)
     
     def get_first_timekey(self):
         return min(self.time_series.keys(), default = get_time_key(time.time()))

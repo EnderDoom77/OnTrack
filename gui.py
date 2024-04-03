@@ -160,7 +160,6 @@ class StatisticsWindow:
         self.app = app
         self.selected_timestep = 3600 * 24
         self.timestep_options = [(3600, "hourly"), (3600 * 24, "daily"), (3600 * 24 * 7, "weekly")]
-        self.category_split_var = tk.BooleanVar(value = False)
         self.graph_image: ImageTk.PhotoImage | None = None
 
         self.window = tk.Toplevel(app.window)
@@ -169,6 +168,15 @@ class StatisticsWindow:
         self.window.transient(app.window)
         self.window.title("Statistics - OnTrack")
         self.window.geometry("960x580")
+
+        self.display_options = {
+            "Time Chart": ("Bar", False, False),
+            "Time Chart by Category": ("Bar", True, False),
+            "Time Chart by Program (Unified)": ("Bar", False, True),
+            "Time Chart by Program (Split)": ("Bar", True, True),
+            "Pie Chart": ("Pie", False, None),
+            "Pie Chart by Category": ("Pie", True, None),
+        }
         
         self.option_frame = tk.Frame(master = self.window)
         self.time_start_selector = DateEntry(master = self.option_frame, date_pattern="YYYY-MM-dd")
@@ -182,17 +190,19 @@ class StatisticsWindow:
         for timestep, label in self.timestep_options:
             self.timestep_buttons.append(ttk.Button(master = self.option_frame, text = label, command = lambda t=timestep: self.set_timestep(t)))
 
-        self.category_split_checkbox = ttk.Checkbutton(master = self.option_frame, text = "Split by category", variable = self.category_split_var, command = self.update_graph)
+        self.display_mode_var = tk.StringVar(value = "Time Chart")
+        self.display_mode_selector = ttk.Combobox(master = self.option_frame, textvariable=self.display_mode_var, values = list(self.display_options.keys()), state = "readonly")
+        self.display_mode_selector.bind("<<ComboboxSelected>>", self.update_graph)
         self.program_selector = ProgramSetSelector(self.window, app.config, app.profile, selected_programs = selected_programs)
 
         self.canvas = tk.Canvas(self.window, bg = "#ffffff")
+        self._reset_t_end(None, False) # must be done first
         self._reset_t_start(None, False)
-        self._reset_t_end(None, False)
 
         # Structure
         self.program_selector.pack(side = 'left', fill="y")
         self.refresh_button.pack(side = 'left')
-        self.category_split_checkbox.pack(side = 'left')
+        self.display_mode_selector.pack(side = 'left')
         for btn in self.timestep_buttons:
             btn.pack(side = 'left')
         self.time_start_selector.pack(side = 'left')
@@ -205,10 +215,15 @@ class StatisticsWindow:
         self.update_graph()
 
     def update_graph(self, _evt = None):
-        split_by_categories = self.category_split_var.get()
+        display_mode = self.display_mode_var.get()
+        graphtype, split_by_categories, split_by_programs = self.display_options[display_mode]
         selected_programs = self.program_selector.get_checked()
+        timestamp_stop = self.timestamp_end + self.selected_timestep
         try:
-            figure, _ = graphs.build_activity_graph(self.app.profile, self.app.config, self.timestamp_start, self.timestamp_end, self.selected_timestep, split_by_categories, selected_programs)
+            if graphtype == "Bar":
+                figure, _ = graphs.build_activity_graph(self.app.profile, self.app.config, self.timestamp_start, timestamp_stop, self.selected_timestep, split_by_categories, split_by_programs, selected_programs)
+            elif graphtype == "Pie":
+                figure, _ = graphs.build_pie_chart(self.app.profile, self.app.config, self.timestamp_start, timestamp_stop, split_by_categories, selected_programs)
         except GraphingError as e:
             messagebox.showerror("Graphing Error", f"{e}")
             return
@@ -224,6 +239,9 @@ class StatisticsWindow:
 
     def _reset_t_start(self, _evt = None, update = True):
         self.timestamp_start = self.app.profile.get_first_timestamp()
+        # Show at most a month by default
+        if (self.timestamp_start < self.timestamp_end - 30 * 86400):
+            self.timestamp_start = self.timestamp_end - 30 * 86400
         self.time_start_selector.set_date(datetime.fromtimestamp(self.timestamp_start))
         if update: self.update_graph()
     def _reset_t_end(self, _evt = None, update = True):
@@ -277,7 +295,7 @@ class App:
 
     def show_graph_window(self, programs: list[ProgramData] = []):
         self.graph_window = StatisticsWindow(self, programs)
-        self.window.wait_window(self.graph_window.window)
+        # self.window.wait_window(self.graph_window.window)
 
     def set_task(self, task: ProgramData):
         if self.has_quit: return
