@@ -50,7 +50,7 @@ class TimeWidget:
         self.frame.pack(side='top', fill='x', expand=True)
 
         # Style initialization
-        self.set_highlight(self.data.id == self.app.profile.selected_program.id)
+        self.set_highlight(self.data.id == self.app.profile.selected_program.get_id())
 
     def set_task(self):
         self.app.set_task(self.data)
@@ -77,7 +77,7 @@ class TimeWidget:
 
     def update_program(self, data: ProgramData):
         self.data = data
-        self.set_highlight(self.data.id == self.app.profile.selected_program.id)
+        self.set_highlight(self.data.id == self.app.profile.selected_program.get_id())
 
         self.label_text.set(time_to_str(data.time))
         self.button_text.set(data.id)
@@ -107,28 +107,40 @@ class TimerWindow:
         self.frame = tk.Frame(master = self.window)
         self.session_timer_label = ttk.Label(master = self.frame, text="00:00:00", font=app.config.label_font)
         self.timer_label = ttk.Label(master = self.frame, text="(00:00:00)", font=app.config.label_font_mini)
+        self.info_label = ttk.Label(master = self.frame, text=self.get_info_text(self.app.profile.selected_program), font=app.config.label_font_mini)
 
         # Structure
         self.session_timer_label.pack()
         self.timer_label.pack()
         self.frame.pack()
+        self.info_label.pack()
 
         # Event handlers
         self.window.protocol("WM_DELETE_WINDOW", self.app.handle_close)
 
-    def set_task(self, task: ProgramData):
+    def set_task(self, task: ITask | None):
         self.app.profile.selected_program = task
         self.update()
 
+    def get_info_text(self, task: ITask | None):
+        if task is None: return "No task selected"
+        return task.get_name()
+    
     def update(self):
         task = self.app.profile.selected_program
         color = "idle"
         if self.app.profile.afk_time >= self.app.config.afk_timeout: color = "afk"
-        elif self.app.active_window == task.id: color = "active"
+        
+        active_program: ProgramData | None = self.app.profile.get_program(self.app.active_window)
+        if  isinstance(task, TotalTask) or \
+            isinstance(task, CategoryTask) and active_program and task.category == active_program.category or \
+            isinstance(task, ProgramData) and active_program and task.get_id() == active_program.id: 
+            color = "active"
 
         bg_color = self.app.config.get_color(color, "#ffffff") 
-        self.session_timer_label.configure(background=bg_color, text=time_to_str(task.session_time))
-        self.timer_label.configure(background=bg_color, text=f"({time_to_str(task.time)})")
+        self.session_timer_label.configure(background=bg_color, text=time_to_str(task.get_session_time()))
+        self.timer_label.configure(background=bg_color, text=f"({time_to_str(task.get_time())})")
+        self.info_label.configure(background=bg_color, text=self.get_info_text(task))
         self.window.configure(bg=bg_color)
         self.frame.configure(bg=bg_color)
 
@@ -138,21 +150,28 @@ class CategoryInfoWidget:
         self.category = category
         self.root = root
         self.frame = tk.Frame(master = root)
-        self.title_label = ttk.Label(master = self.frame, text = category or "Total", font = app.config.label_font_mini)
+        self.task = CategoryTask(category, app.profile) if category else TotalTask(app.profile)
+        self.title_button = ttk.Button(master = self.frame, text = self.task.get_name(), command=lambda: app.set_task(self.task))
         self.time_session_var = tk.StringVar(value = f"({app.profile.get_category_session_time(category)})")
         self.time_var = tk.StringVar(value = f"{app.profile.get_category_time(category)}")
         self.session_timer_label = ttk.Label(master = self.frame, textvariable = self.time_session_var, font = app.config.label_font)
         self.timer_label = ttk.Label(master = self.frame, textvariable = self.time_var, font = app.config.label_font_mini)
 
         # Structure
-        self.title_label.pack()
+        self.title_button.pack()
         self.session_timer_label.pack()
         self.timer_label.pack()
         self.frame.pack(side='left', padx=10, fill="x")
 
     def update(self):
+        bg_color = self.app.config.get_color("unselected")
+        if self.app.profile.selected_program == self.task:
+            bg_color = self.app.config.get_color("active")
+        self.frame.configure(bg = bg_color)
         self.time_session_var.set(f"{time_to_str(self.app.profile.get_category_session_time(self.category))}")
         self.time_var.set(f"({time_to_str(self.app.profile.get_category_time(self.category))})")
+        self.session_timer_label.configure(background = bg_color)
+        self.timer_label.configure(background = bg_color)
 
 class StatisticsWindow:
     def __init__(self, app: "App", selected_programs: list[ProgramData] = []):

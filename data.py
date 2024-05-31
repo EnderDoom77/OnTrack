@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from datetime import datetime
 import json
 import math
@@ -30,7 +31,11 @@ class Profile:
         self.programs: dict[str, ProgramData] = {k: ProgramData.from_dict(config, k,v) for k,v in programs.items()}
         self.session_data: dict[str, ProgramData] = {}
         self.other_params = kwargs
-        self.selected_program: ProgramData = self.programs.get(selected_program, DEFAULT_PROGRAM_DATA)
+        self.selected_program: ITask = None
+        if selected_program.startswith("CATEGORY_"):
+            self.selected_program: ITask = CategoryTask(selected_program[9:], self)
+        else:
+            self.selected_program: ITask = self.programs.get(selected_program, DEFAULT_PROGRAM_DATA)
         self.config = config
         self.afk_time : float = 0
 
@@ -38,7 +43,7 @@ class Profile:
         return {
             "version": CURRENT_SCHEMA_VERSION,
             "programs": {k: v.to_dict() for k,v in self.programs.items()},
-            "selected_program": self.selected_program.id
+            "selected_program": self.selected_program.get_id(),
         }
     
     @staticmethod
@@ -88,7 +93,28 @@ class Profile:
     def get_last_timestamp(self):
         return get_time_from_key(self.get_last_timekey())
     
-class ProgramData:
+class ITask:
+    @abstractmethod
+    def get_id(self) -> str: pass
+    @abstractmethod
+    def get_name(self) -> str: pass
+
+    @abstractmethod
+    def get_time(self) -> float: pass
+    @abstractmethod
+    def get_session_time(self) -> float: pass
+    @abstractmethod
+    def get_timeframe_time(self, start: float, end: float) -> float: pass
+    @abstractmethod
+    def get_first_timekey(self): pass
+    @abstractmethod
+    def get_last_timekey(self): pass
+    @abstractmethod
+    def get_first_timestamp(self): pass
+    @abstractmethod
+    def get_last_timestamp(self): pass
+
+class ProgramData(ITask):
     def __init__(self, config: Config, id: str, time: float = 0, time_series: dict[str,float] = {}, visibility: str = P_VIS_DEFAULT, program_type: str = None, display_name: str | None = None, afk_sensitive: bool = True):
         self.config = config
         if program_type is None:
@@ -125,6 +151,17 @@ class ProgramData:
     def from_dict(config: Config, key: str, data: dict):
         return ProgramData(config, key, **data)
     
+    def get_id(self) -> str:
+        return self.id
+    def get_name(self) -> str:
+        return self.display_name
+    
+    # Fulfill ITask interface
+    def get_time(self) -> float:
+        return self.time
+    def get_session_time(self) -> float:
+        return self.session_time
+
     def is_visible(self):
         return self.visibility != P_VIS_HIDDEN
     def has_afk_timer(self):
@@ -163,6 +200,59 @@ class ProgramData:
         return min(self.time_series.keys(), default = get_time_key(time.time()))
     def get_last_timekey(self):
         return max(self.time_series.keys(), default = get_time_key(time.time()))
+    def get_first_timestamp(self):
+        return get_time_from_key(self.get_first_timekey())
+    def get_last_timestamp(self):
+        return get_time_from_key(self.get_last_timekey())
+
+class CategoryTask(ITask):
+    def __init__(self, category: str, profile: Profile):
+        self.category = category
+        self.profile = profile
+
+    def get_id(self) -> str:
+        return f"CATEGORY_{self.category}"
+    def get_name(self) -> str:
+        return self.category
+
+    def get_time(self) -> float:
+        return self.profile.get_category_time(self.category)
+    def get_session_time(self) -> float:
+        return self.profile.get_category_session_time(self.category)
+    
+    def get_timeframe_time(self, start: float, end: float) -> float:
+        return sum(p.get_timeframe_time(start, end) for p in self.profile.programs.values() if p.category == self.category and p.is_visible())
+    
+    def get_first_timekey(self):
+        return min(p.get_first_timekey() for p in self.profile.programs.values() if p.category == self.category and p.is_visible())
+    def get_last_timekey(self):
+        return max(p.get_last_timekey() for p in self.profile.programs.values() if p.category == self.category and p.is_visible())
+    def get_first_timestamp(self):
+        return get_time_from_key(self.get_first_timekey())
+    def get_last_timestamp(self):
+        return get_time_from_key(self.get_last_timekey())
+
+class TotalTask(ITask):
+    def __init__(self, profile: Profile):
+        self.profile = profile
+
+    def get_id(self) -> str:
+        return "Total"
+    def get_name(self) -> str:
+        return "Total"
+
+    def get_time(self) -> float:
+        return self.profile.get_total_time()
+    def get_session_time(self) -> float:
+        return self.profile.get_total_session_time()
+    
+    def get_timeframe_time(self, start: float, end: float) -> float:
+        return sum(p.get_timeframe_time(start, end) for p in self.profile.programs.values() if p.is_visible())
+    
+    def get_first_timekey(self):
+        return min(p.get_first_timekey() for p in self.profile.programs.values() if p.is_visible())
+    def get_last_timekey(self):
+        return max(p.get_last_timekey() for p in self.profile.programs.values() if p.is_visible())
     def get_first_timestamp(self):
         return get_time_from_key(self.get_first_timekey())
     def get_last_timestamp(self):
